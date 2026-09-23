@@ -135,13 +135,14 @@ function closeStages(){document.querySelectorAll('.stage').forEach(s=>s.classLis
 function initGames(){
   document.querySelectorAll('.game-card').forEach(c=>c.onclick=()=>openGame(c.dataset.game));
   document.querySelectorAll('[data-back]').forEach(b=>b.onclick=closeStages);
-  initSnake();initTTT();init2048();initMemory();initReact();initBJ();initInvoker();
+  initSnake();initDJ();initLock();initMemory();initReact();initPoker();initBJ();initInvoker();
   refreshScores();
 }
 function refreshScores(){
   $('#sc-snake').textContent='Рекорд: '+store.get('snakeBest',0);
-  $('#sc-ttt').textContent=store.get('tttX',0)+' : '+store.get('tttO',0);
-  $('#sc-2048').textContent='Рекорд: '+store.get('g2048Best',0);
+  const djb=store.get('djBest',0);$('#sc-dj').textContent='Рекорд: '+djb;
+  const lkb=store.get('lockBest',0);$('#sc-lock').textContent='Рекорд: '+lkb;
+  const pkb=store.get('pkBest',100);$('#sc-poker').textContent='Кредит: '+store.get('pkCredits',100);
   const m=store.get('memBest',null);$('#sc-memory').textContent=m==null?'—':'Лучший: '+m+' ходов';
   const r=store.get('reactBest',null);$('#sc-react').textContent=r==null?'—':'Рекорд: '+r+' мс';
   $('#sc-bj').textContent=store.get('bjW',0)+' / '+store.get('bjL',0);
@@ -169,36 +170,165 @@ function initSnake(){
   cv.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-tx,dy=t.clientY-ty;if(Math.abs(dx)<20&&Math.abs(dy)<20)return;nd=Math.abs(dx)>Math.abs(dy)?{x:Math.sign(dx),y:0}:{x:0,y:Math.sign(dy)};},{passive:true});
   $('#snakeRestart').onclick=reset;reset();
 }
-/* --- крестики --- */
-function initTTT(){
-  let b=Array(9).fill(''),turn='✕';
-  function draw(){$('#tttGrid').innerHTML=b.map((v,i)=>`<button data-i="${i}">${v}</button>`).join('');document.querySelectorAll('#tttGrid button').forEach(x=>x.onclick=()=>move(+x.dataset.i));$('#tttX').textContent=store.get('tttX',0);$('#tttO').textContent=store.get('tttO',0);$('#tttD').textContent=store.get('tttD',0);refreshScores();}
-  function win(){const L=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];for(const[a,c,d]of L)if(b[a]&&b[a]===b[c]&&b[a]===b[d])return b[a];return b.includes('')?null:'draw';}
-  function move(i){if(b[i])return;b[i]=turn;const w=win();if(w){if(w==='draw'){store.set('tttD',store.get('tttD',0)+1);$('#tttStatus').textContent='Ничья!';}else{store.set(w==='✕'?'tttX':'tttO',store.get(w==='✕'?'tttX':'tttO',0)+1);$('#tttStatus').textContent='Победил '+w+'!';}draw();setTimeout(()=>{b=Array(9).fill('');turn='✕';$('#tttStatus').textContent='Ход: ✕';draw();},1200);return;}turn=turn==='✕'?'○':'✕';$('#tttStatus').textContent='Ход: '+turn;draw();}
-  $('#tttRestart').onclick=()=>{b=Array(9).fill('');turn='✕';$('#tttStatus').textContent='Ход: ✕';draw();};
-  draw();
-}
-/* --- 2048 --- */
-function init2048(){
-  let g,score;
-  function reset(){g=Array.from({length:4},()=>Array(4).fill(0));score=0;add();add();draw();}
-  function add(){const e=[];g.forEach((r,y)=>r.forEach((v,x)=>{if(!v)e.push([y,x]);}));if(!e.length)return;const[y,x]=e[(Math.random()*e.length)|0];g[y][x]=Math.random()<.9?2:4;}
-  function slide(r){r=r.filter(v=>v);for(let i=0;i<r.length-1;i++)if(r[i]===r[i+1]){r[i]*=2;score+=r[i];r.splice(i+1,1);}while(r.length<4)r.push(0);return r;}
-  function move(dx,dy){
-    let moved=false;const ng=g.map(r=>r.slice());
-    for(let n=0;n<4;n++){
-      let line=[];for(let i=0;i<4;i++){const y=dy!==0?(dy>0?3-i:i):n,x=dx!==0?(dx>0?3-i:i):n;line.push(ng[y][x]);}
-      const nl=slide(line);
-      for(let i=0;i<4;i++){const y=dy!==0?(dy>0?3-i:i):n,x=dx!==0?(dx>0?3-i:i):n;if(ng[y][x]!==nl[i])moved=true;ng[y][x]=nl[i];}
-    }
-    if(moved){g=ng;add();draw();const b=store.get('g2048Best',0);if(score>b)store.set('g2048Best',score);refreshScores();if(!g.flat().includes(0)&&over())toast('Игра окончена · '+score);}
+/* --- дири-джампер (карнавал): прыгай вверх за Сларка --- */
+function initDJ(){
+  const cv=$('#djCanvas'),ctx=cv.getContext('2d'),W=360,H=520;
+  let p,plats,foes,shots,dir,knifeCD,cam,minY,score,over,loop;
+  const best0=store.get('djBest',0);$('#djBest').textContent=best0;
+  function reset(){
+    p={x:W/2,y:H-60,vx:0,vy:-11};dir=0;knifeCD=0;
+    plats=[{x:20,y:H-30,w:90,t:''},{x:140,y:H-110,w:80,t:''},{x:250,y:H-190,w:80,t:''}];
+    foes=[];shots=[];cam=0;minY=p.y;score=0;over=false;
+    $('#djScore').textContent='0';
+    clearInterval(loop);loop=setInterval(step,1000/60);
   }
-  function over(){for(let y=0;y<4;y++)for(let x=0;x<4;x++){if(!g[y][x])return false;if(x<3&&g[y][x]===g[y][x+1])return false;if(y<3&&g[y][x]===g[y+1][x])return false;}return true;}
-  function draw(){$('#g2048Score').textContent=score;$('#g2048Best').textContent=Math.max(store.get('g2048Best',0),score);$('#g2048Grid').innerHTML=g.flat().map(v=>`<div class="t${v}">${v||''}</div>`).join('');}
-  addEventListener('keydown',e=>{if(!$('#stage-g2048').classList.contains('on'))return;if(e.key==='ArrowUp')move(0,-1);if(e.key==='ArrowDown')move(0,1);if(e.key==='ArrowLeft')move(-1,0);if(e.key==='ArrowRight')move(1,0);});
-  let tx=0,ty=0;const el=$('#g2048Grid');el.addEventListener('touchstart',e=>{const t=e.touches[0];tx=t.clientX;ty=t.clientY;},{passive:true});
-  el.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-tx,dy=t.clientY-ty;if(Math.abs(dx)<24&&Math.abs(dy)<24)return;if(Math.abs(dx)>Math.abs(dy))move(Math.sign(dx),0);else move(0,Math.sign(dy));},{passive:true});
-  $('#g2048Restart').onclick=reset;reset();
+  function genRow(y){
+    const h=Math.max(0,-y);
+    const r=Math.random();
+    const w=70+Math.random()*40;
+    const x=Math.random()*(W-w);
+    let t='';
+    if(h>500&&r<0.12)t='spring';else if(h>900&&r<0.24)t='break';else if(h>1400&&r<0.34)t='spike';
+    plats.push({x,y,w,t});
+    if(h>700&&Math.random()<Math.min(0.05+h/8000,0.3))foes.push({x:Math.random()*(W-20),y:y-60,vx:(Math.random()<.5?-1:1)*(0.5+h/4000)});
+  }
+  function shoot(){if(knifeCD>0||over)return;knifeCD=18;shots.push({x:p.x,y:p.y-10});}
+  function step(){
+    if(!$('#stage-dj').classList.contains('on')||over)return;
+    if(dir!==0){p.x+=dir*3.4;}
+    if(p.x<-10)p.x=W+10;if(p.x>W+10)p.x=-10;
+    p.vy=Math.min(p.vy+0.32,14);p.y+=p.vy;
+    if(knifeCD>0)knifeCD--;
+    if(p.y<cam+180){cam=p.y-180;}
+    if(p.y<minY){minY=p.y;score=Math.max(0,Math.round(-minY));$('#djScore').textContent=score;}
+    while(plats.length&&plats[0].y>cam+H+50)plats.shift();
+    let topY=plats.length?Math.min(...plats.map(q=>q.y)):cam;
+    while(topY>cam-80){topY-=60+Math.random()*50;genRow(topY);}
+    foes=foes.filter(f=>f.y<cam+H+60);
+    for(const f of foes){f.x+=f.vx;if(f.x<0||f.x>W-18)f.vx*=-1;}
+    // платформы
+    if(p.vy>0){
+      for(let i=0;i<plats.length;i++){
+        const q=plats[i];
+        if(p.y>=q.y-4&&p.y<=q.y+10&&p.x>q.x-8&&p.x<q.x+q.w+8){
+          if(q.t==='spike'){die();return;}
+          p.y=q.y-4;p.vy=q.t==='spring'?-17.5:-11;
+          if(q.t==='break')plats.splice(i,1);
+          break;
+        }
+      }
+    }
+    // ножи
+    for(const s of shots)s.y-=9;
+    shots=shots.filter(s=>s.y>cam-40);
+    for(let i=shots.length-1;i>=0;i--){
+      const s=shots[i];
+      const hit=foes.findIndex(f=>Math.abs(s.x-(f.x+9))<14&&Math.abs(s.y-(f.y+9))<16);
+      if(hit>=0){foes.splice(hit,1);shots.splice(i,1);score+=25;$('#djScore').textContent=score;}
+    }
+    // враги и падение
+    for(const f of foes){
+      if(Math.abs(p.x-(f.x+9))<20&&Math.abs(p.y-(f.y+9))<22&&p.vy>-2){die();return;}
+    }
+    if(p.y>cam+H+20){die();return;}
+    // отрисовка
+    const ink=document.documentElement.dataset.theme==='light'?'#141412':'#ece8de';
+    const dim=document.documentElement.dataset.theme==='light'?'#a09a8c':'#63605a';
+    ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+    ctx.save();ctx.translate(0,-cam);
+    for(const q of plats){
+      if(q.t==='break'){ctx.strokeStyle=dim;ctx.setLineDash([5,4]);ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(q.x,q.y);ctx.lineTo(q.x+q.w,q.y);ctx.stroke();ctx.setLineDash([]);}
+      else{ctx.fillStyle=ink;ctx.fillRect(q.x,q.y-2,q.w,4);
+        if(q.t==='spring'){ctx.fillRect(q.x,q.y-8,q.w,3);}
+        if(q.t==='spike'){ctx.fillStyle='#b03a2e';for(let sx=q.x+4;sx<q.x+q.w-4;sx+=12){ctx.beginPath();ctx.moveTo(sx,q.y-2);ctx.lineTo(sx+5,q.y-12);ctx.lineTo(sx+10,q.y-2);ctx.fill();}}}
+    }
+    for(const f of foes){ctx.fillStyle='#b03a2e';ctx.fillRect(f.x,f.y,18,18);ctx.fillStyle='#000';ctx.fillRect(f.x+4,f.y+4,4,4);ctx.fillRect(f.x+10,f.y+4,4,4);}
+    for(const s of shots){ctx.fillStyle=ink;ctx.fillRect(s.x-1,s.y-8,2,10);}
+    ctx.fillStyle=ink;ctx.fillRect(p.x-9,p.y-14,18,20);
+    ctx.restore();
+    ctx.fillStyle=dim;ctx.font='11px monospace';ctx.fillText(score+' м',10,18);
+  }
+  function die(){
+    over=true;clearInterval(loop);
+    const b=store.get('djBest',0);if(score>b){store.set('djBest',score);$('#djBest').textContent=score;}
+    refreshScores();toast('Забег окончен. Высота: '+score+' м');
+  }
+  addEventListener('keydown',e=>{
+    if(!$('#stage-dj').classList.contains('on'))return;
+    const k=e.key.toLowerCase();
+    if(k==='arrowleft'||k==='a'||k==='ф')dir=-1;
+    else if(k==='arrowright'||k==='d'||k==='в')dir=1;
+    else if(k==='arrowup'||k==='w'||k==='ц'||k===' ')shoot();
+  });
+  addEventListener('keyup',()=>{dir=0;});
+  function hold(btn,v){
+    btn.addEventListener('touchstart',e=>{e.preventDefault();dir=v;},{passive:false});
+    btn.addEventListener('touchend',()=>{dir=0;});
+    btn.addEventListener('mousedown',()=>{dir=v;});
+    btn.addEventListener('mouseup',()=>{dir=0;});
+  }
+  hold($('#djLeft'),-1);hold($('#djRight'),1);
+  $('#djKnife').onclick=shoot;
+  $('#djRestart').onclick=reset;
+  reset();
+}
+/* --- взлом замка (карнавал): тайминг на вращающемся замке --- */
+function initLock(){
+  const cv=$('#lockCanvas'),ctx=cv.getContext('2d'),S=320,C=S/2,R=120;
+  let ang,speed,yellow,blue,score,left,over,timer;
+  function newYellow(){
+    const w=Math.max(0.16,(yellow?yellow.w:0.55)*0.96);
+    yellow={s:Math.random()*Math.PI*2,w};
+    blue=(Math.random()<0.35)?{s:Math.random()*Math.PI*2,w:0.4}:null;
+  }
+  function reset(){
+    ang=0;speed=0.045;score=0;left=30;over=false;
+    $('#lockScore').textContent='0';$('#lockTime').textContent='30';
+    yellow={s:1,w:0.55};blue=null;
+    clearInterval(timer);timer=setInterval(()=>{if(!$('#stage-lock').classList.contains('on')||over)return;left--;$('#lockTime').textContent=left;if(left<=0)finish();},1000);
+    draw();
+  }
+  function inZone(a,z){if(!z)return false;let d=(a-z.s)%(Math.PI*2);if(d<0)d+=Math.PI*2;return d<z.w;}
+  function strike(){
+    if(over)return;
+    if(!$('#stage-lock').classList.contains('on'))return;
+    const a=((ang% (Math.PI*2))+Math.PI*2)%(Math.PI*2);
+    if(inZone(a,yellow)){score+=1000;speed=Math.min(speed+0.0025,0.12);newYellow();}
+    else if(inZone(a,blue)){left+=4;$('#lockTime').textContent=left;blue=null;toast('+4 сек');}
+    else{left=Math.max(0,left-1);}
+    $('#lockScore').textContent=score;draw();
+  }
+  function arc(z,color,lw){
+    ctx.strokeStyle=color;ctx.lineWidth=lw;ctx.beginPath();
+    ctx.arc(C,C,R,z.s-Math.PI/2,z.s+z.w-Math.PI/2,false);ctx.stroke();
+  }
+  function draw(){
+    const ink=document.documentElement.dataset.theme==='light'?'#141412':'#ece8de';
+    const dim=document.documentElement.dataset.theme==='light'?'#a09a8c':'#63605a';
+    ctx.clearRect(0,0,S,S);
+    ctx.strokeStyle=dim;ctx.lineWidth=2;ctx.beginPath();ctx.arc(C,C,R,0,7);ctx.stroke();
+    ctx.strokeStyle=dim;ctx.lineWidth=1;ctx.beginPath();ctx.arc(C,C,R-22,0,7);ctx.stroke();
+    for(let i=0;i<12;i++){const a=i/12*Math.PI*2;ctx.strokeStyle=dim;ctx.beginPath();ctx.moveTo(C+Math.cos(a)*(R-8),C+Math.sin(a)*(R-8));ctx.lineTo(C+Math.cos(a)*(R+8),C+Math.sin(a)*(R+8));ctx.stroke();}
+    if(blue)arc(blue,'#7fa3b8',12);
+    if(yellow)arc(yellow,'#c8a24a',12);
+    ctx.save();ctx.translate(C,C);ctx.rotate(ang);
+    ctx.strokeStyle=ink;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-R-14);ctx.stroke();
+    ctx.fillStyle=ink;ctx.beginPath();ctx.arc(0,-R-14,5,0,7);ctx.fill();
+    ctx.restore();
+    ctx.fillStyle=ink;ctx.beginPath();ctx.arc(C,C,10,0,7);ctx.fill();
+  }
+  function finish(){
+    over=true;clearInterval(timer);
+    const b=store.get('lockBest',0);if(score>b){store.set('lockBest',score);$('#lockBest').textContent=score;}
+    refreshScores();toast('Замок заклинило. Очки: '+score);
+  }
+  setInterval(()=>{if(over||!$('#stage-lock').classList.contains('on'))return;ang+=speed;draw();},1000/60);
+  $('#lockHit').onclick=strike;
+  cv.onclick=strike;
+  addEventListener('keydown',e=>{if(!$('#stage-lock').classList.contains('on'))return;if(e.key===' '){e.preventDefault();strike();}});
+  $('#lockRestart').onclick=reset;
+  $('#lockBest').textContent=store.get('lockBest',0);
+  reset();
 }
 /* --- memory --- */
 function initMemory(){
@@ -263,6 +393,82 @@ function initInvoker(){
   addEventListener('keydown',e=>{if(!$('#stage-invoker').classList.contains('on'))return;const k=e.key.toLowerCase();if(k==='q'||k==='й')press('Q');else if(k==='w'||k==='ц')press('W');else if(k==='e'||k==='у')press('E');else if(k==='r'||k==='к')invoke();});
   $('#invRestart').onclick=start;
   orbBox();pick();best();
+}
+
+/* --- покер: видеопокер «валеты и выше», ставка 5 --- */
+function initPoker(){
+  const BET=5,RANKS=['2','3','4','5','6','7','8','9','10','J','Q','K','A'],SUITS=['♠','♥','♦','♣'];
+  const PAY=[['Пара валетов и выше',1],['Две пары',2],['Тройка',3],['Стрит',4],['Флеш',6],['Фулл-хаус',9],['Каре',25],['Стрит-флеш',50],['Роял-флеш',250]];
+  let hand=[],held=[],phase='idle';
+  const credits=()=>store.get('pkCredits',100);
+  function sync(){
+    $('#pkCredits').textContent=credits();
+    const b=store.get('pkBest',100);$('#pkBest').textContent=b;
+    $('#sc-poker').textContent='Кредит: '+credits();
+  }
+  function drawHand(){
+    $('#pkHand').innerHTML=hand.map((c,i)=>{
+      const red=(c.s===1||c.s===2)?' red':'';
+      const h=held[i]?' held':'';
+      return `<div class="pk-card${red}${h}" data-i="${i}">${RANKS[c.r]}${SUITS[c.s]}<small>${held[i]?'ДЕРЖУ':'&nbsp;'}</small></div>`;
+    }).join('');
+    document.querySelectorAll('#pkHand .pk-card').forEach(el=>el.onclick=()=>{
+      if(phase!=='hold')return;
+      const i=+el.dataset.i;held[i]=!held[i];drawHand();
+    });
+  }
+  function result(h){
+    const rs=h.map(c=>c.r).sort((a,b)=>a-b);
+    const flush=h.every(c=>c.s===h[0].s);
+    const uniq=[...new Set(rs)];
+    const wheel=JSON.stringify(rs)===JSON.stringify([0,1,2,3,12]);
+    const straight=wheel||(uniq.length===5&&rs[4]-rs[0]===4);
+    const cnt={};rs.forEach(r=>cnt[r]=(cnt[r]||0)+1);
+    const groups=Object.values(cnt).sort((a,b)=>b-a);
+    const royal=flush&&JSON.stringify(rs)===JSON.stringify([8,9,10,11,12]);
+    if(royal)return 8;
+    if(flush&&straight)return 7;
+    if(groups[0]===4)return 6;
+    if(groups[0]===3&&groups[1]===2)return 5;
+    if(flush)return 4;
+    if(straight)return 3;
+    if(groups[0]===3)return 2;
+    if(groups[0]===2&&groups[1]===2)return 1;
+    if(groups[0]===2){
+      const pairRank=+Object.keys(cnt).find(k=>cnt[k]===2);
+      if(pairRank>=9)return 0;
+    }
+    return -1;
+  }
+  function deck(){
+    const d=[];for(let r=0;r<13;r++)for(let s=0;s<4;s++)d.push({r,s});
+    for(let i=d.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[d[i],d[j]]=[d[j],d[i]];}
+    return d;
+  }
+  let shoe=[];
+  $('#pkDeal').onclick=()=>{
+    let c=credits();
+    if(c<BET){c=100;store.set('pkCredits',100);toast('Кредит пополнен до 100');}
+    store.set('pkCredits',c-BET);
+    shoe=deck();hand=shoe.splice(0,5);held=[false,false,false,false,false];phase='hold';
+    $('#pkMsg').textContent='Выбери карты для замены и жми «Заменить».';
+    drawHand();sync();
+  };
+  $('#pkDraw').onclick=()=>{
+    if(phase!=='hold'){toast('Сначала раздай');return;}
+    for(let i=0;i<5;i++)if(!held[i])hand[i]=shoe.pop();
+    phase='done';
+    const r=result(hand);
+    if(r>=0){
+      const win=PAY[r][1]*BET;
+      const c=credits()+win;store.set('pkCredits',c);
+      const b=store.get('pkBest',100);if(c>b)store.set('pkBest',c);
+      $('#pkMsg').textContent=PAY[r][0]+' · +'+win;
+    }else $('#pkMsg').textContent='Нет игры. Еще раз?';
+    if(credits()<BET)$('#pkMsg').textContent+=' · кредит пуст';
+    drawHand();sync();
+  };
+  sync();
 }
 
 /* ============ ИНСТРУМЕНТЫ ============ */

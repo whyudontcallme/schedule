@@ -90,10 +90,11 @@
 <section class="view" id="view-games">
   <div id="gamesHub" class="grid3">
     <div class="game-card" data-game="snake"><span class="ge">SN</span><h3>Змейка</h3><p>Стрелки / WASD / свайп</p><div class="gs" id="sc-snake">Рекорд: 0</div></div>
-    <div class="game-card" data-game="ttt"><span class="ge">XO</span><h3>Крестики-нолики</h3><p>Двое на одном экране</p><div class="gs" id="sc-ttt">0 : 0</div></div>
-    <div class="game-card" data-game="g2048"><span class="ge">48</span><h3>2048</h3><p>Собери 2048</p><div class="gs" id="sc-2048">Рекорд: 0</div></div>
+    <div class="game-card" data-game="dj"><span class="ge">DJ</span><h3>Дири-джампер</h3><p>Прыгай вверх за Сларка</p><div class="gs" id="sc-dj">Рекорд: 0</div></div>
+    <div class="game-card" data-game="lock"><span class="ge">LP</span><h3>Взлом замка</h3><p>Попади в зону на замке</p><div class="gs" id="sc-lock">Рекорд: 0</div></div>
     <div class="game-card" data-game="memory"><span class="ge">MM</span><h3>Memory</h3><p>Найди все пары</p><div class="gs" id="sc-memory">—</div></div>
     <div class="game-card" data-game="react"><span class="ge">RX</span><h3>Реакция</h3><p>Миллисекунды точности</p><div class="gs" id="sc-react">—</div></div>
+    <div class="game-card" data-game="poker"><span class="ge">PK</span><h3>Покер</h3><p>Видеопокер: валеты и выше</p><div class="gs" id="sc-poker">Кредит: 100</div></div>
     <div class="game-card" data-game="bj"><span class="ge">BJ</span><h3>Блэкджек</h3><p>21 против дилера</p><div class="gs" id="sc-bj">0 / 0</div></div>
     <div class="game-card" data-game="invoker"><span class="ge">IN</span><h3>Инвокер</h3><p>QWE + Invoke на скорость</p><div class="gs" id="sc-invoker">Рекорд: —</div></div>
   </div>
@@ -105,16 +106,20 @@
     <div class="dpad"><button data-dir="up">▲</button><button data-dir="left">◀</button><button data-dir="down">▼</button><button data-dir="right">▶</button></div></div>
   </div>
 
-  <div class="stage" id="stage-ttt">
-    <div class="stage-top"><button class="btn ghost" data-back>← Игры</button><button class="btn primary" id="tttRestart">Заново</button></div>
-    <div class="glass panel"><div class="score-row"><span class="chip2">✕ <b id="tttX">0</b></span><span class="chip2">○ <b id="tttO">0</b></span><span class="chip2">Ничьи <b id="tttD">0</b></span></div>
-    <div class="center" id="tttStatus">Ход: ✕</div><div class="ttt" id="tttGrid"></div></div>
+  <div class="stage" id="stage-dj">
+    <div class="stage-top"><button class="btn ghost" data-back>← Игры</button><button class="btn primary" id="djRestart">Заново</button></div>
+    <div class="glass panel"><div class="score-row"><span class="chip2">Высота <b id="djScore">0</b></span><span class="chip2">Рекорд <b id="djBest">0</b></span></div>
+    <canvas id="djCanvas" width="360" height="520"></canvas>
+    <div class="row"><button class="btn" id="djLeft">◀</button><button class="btn primary" id="djKnife">Нож</button><button class="btn" id="djRight">▶</button></div>
+    <p class="center muted">A / D или стрелки — движение · W / вверх — нож · края экрана сквозные</p></div>
   </div>
 
-  <div class="stage" id="stage-g2048">
-    <div class="stage-top"><button class="btn ghost" data-back>← Игры</button><button class="btn primary" id="g2048Restart">Заново</button></div>
-    <div class="glass panel"><div class="score-row"><span class="chip2">Счёт <b id="g2048Score">0</b></span><span class="chip2">Рекорд <b id="g2048Best">0</b></span></div>
-    <div class="g2048" id="g2048Grid"></div><p class="center muted">Стрелки / WASD / свайп</p></div>
+  <div class="stage" id="stage-lock">
+    <div class="stage-top"><button class="btn ghost" data-back>← Игры</button><button class="btn primary" id="lockRestart">Заново</button></div>
+    <div class="glass panel"><div class="score-row"><span class="chip2">Очки <b id="lockScore">0</b></span><span class="chip2">Время <b id="lockTime">30</b>с</span><span class="chip2">Рекорд <b id="lockBest">0</b></span></div>
+    <canvas id="lockCanvas" width="320" height="320"></canvas>
+    <div class="row"><button class="btn primary" id="lockHit">Взломать</button></div>
+    <p class="center muted">Жёлтая зона — 1000 очков · синяя — плюс время · зоны сужаются</p></div>
   </div>
 
   <div class="stage" id="stage-memory">
@@ -136,6 +141,15 @@
     <div class="center muted">Вы (<span id="bjPS">0</span>)</div><div class="bj-row" id="bjPRow"></div>
     <div class="row"><button class="btn primary" id="bjHit">Ещё</button><button class="btn" id="bjStand">Хватит</button></div>
     <p class="center" id="bjMsg"></p></div>
+  </div>
+
+  <div class="stage" id="stage-poker">
+    <div class="stage-top"><button class="btn ghost" data-back>← Игры</button><button class="btn primary" id="pkDeal">Раздать</button></div>
+    <div class="glass panel"><div class="score-row"><span class="chip2">Кредит <b id="pkCredits">100</b></span><span class="chip2">Ставка <b>5</b></span><span class="chip2">Рекорд <b id="pkBest">100</b></span></div>
+    <div class="pk-hand" id="pkHand"></div>
+    <div class="center" id="pkMsg">Нажми «Раздать». Выигрыш от пары валетов.</div>
+    <div class="row"><button class="btn primary" id="pkDraw">Заменить</button></div>
+    <p class="center muted">Тап по карте — оставить · выплаты: пара 1 · две пары 2 · тройка 3 · стрит 4 · флеш 6 · фулл 9 · каре 25 · стрит-флеш 50 · рояль 250 (× ставка)</p></div>
   </div>
 
   <div class="stage" id="stage-invoker">
@@ -193,7 +207,7 @@
 
 </main>
 
-<footer class="footer">v5 · Enfants-inspired edition · авто чёт/нечет</footer>
+<footer class="footer">v6 · тёмный карнавал: дири-джампер, взлом замка, покер</footer>
 <nav class="bottomnav">
   <button class="bnav active" data-view="home"><small>Главная</small></button>
   <button class="bnav" data-view="schedule"><small>Пары</small></button>

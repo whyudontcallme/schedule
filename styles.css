@@ -154,15 +154,14 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
 .dpad{display:grid;grid-template-columns:repeat(3,52px);gap:1px;justify-content:center;margin-top:14px}
 .dpad button{height:48px;background:transparent;border:1px solid var(--line);color:var(--ink);font-size:15px}
 .dpad button:first-child{grid-column:2}
-.ttt{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;max-width:320px;margin:14px auto 0;background:var(--line);border:1px solid var(--line)}
-.ttt button{aspect-ratio:1;background:var(--bg2);border:0;font-family:var(--serif);font-size:40px;color:var(--ink);cursor:pointer}
-.g2048{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;max-width:360px;margin:0 auto;background:var(--line);border:1px solid var(--line)}
-.g2048 div{aspect-ratio:1;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:21px}
-.g2048 .t2{background:var(--bg2)}.g2048 .t4{background:#1b1b1e}.g2048 .t8{background:#26262a}
-.g2048 .t16{background:#333338}.g2048 .t32{background:#43434a}.g2048 .t64{background:#55555e;color:#fff}
-.g2048 .t128{background:#6e6e78;color:#fff}.g2048 .t256{background:#8d8d98;color:#0c0c0d}
-.g2048 .t512{background:#b0b0ba;color:#0c0c0d}.g2048 .t1024{background:var(--ink);color:var(--bg)}
-.g2048 .t2048{background:var(--accent);color:#fff}
+#djCanvas{width:100%;max-width:360px;display:block;margin:0 auto;background:#000;border:1px solid var(--line);touch-action:none}
+#lockCanvas{width:100%;max-width:320px;display:block;margin:0 auto;touch-action:manipulation}
+.pk-hand{display:flex;gap:8px;justify-content:center;margin:6px 0 12px;flex-wrap:wrap}
+.pk-card{width:56px;min-height:78px;background:#f4f1ea;color:#111;border:1px solid #d8d2c4;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--serif);font-size:19px;cursor:pointer;padding:6px 0 4px}
+.pk-card small{font-family:var(--sans);font-size:8px;letter-spacing:.18em;color:var(--faint);margin-top:4px}
+.pk-card.red{color:#8f2b22}
+.pk-card.held{outline:2px solid var(--ink);outline-offset:-2px}
+.pk-card.held small{color:var(--ink)}
 .mem{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;max-width:400px;margin:0 auto;background:var(--line);border:1px solid var(--line)}
 .mem button{aspect-ratio:1;background:var(--bg2);border:0;font-family:var(--serif);font-size:22px;cursor:pointer;color:var(--faint)}
 .mem button.open{background:var(--ink);color:var(--bg)}
