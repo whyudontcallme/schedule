@@ -146,7 +146,8 @@ function refreshScores(){
   const m=store.get('memBest',null);$('#sc-memory').textContent=m==null?'—':'Лучший: '+m+' ходов';
   const r=store.get('reactBest',null);$('#sc-react').textContent=r==null?'—':'Рекорд: '+r+' мс';
   $('#sc-bj').textContent=store.get('bjW',0)+' / '+store.get('bjL',0);
-  const ib=store.get('invBest',null);$('#sc-invoker').textContent=ib==null?'Рекорд: —':'Рекорд: '+ib;
+  const rb=(store.get('invRaceBest',[])[0]);const tb=store.get('invTimeBest',null);
+  $('#sc-invoker').textContent=rb!=null?('Гонка: '+(rb/1000).toFixed(1)+' с'):(tb!=null?('Минута: '+tb):'Рекорд: —');
 }
 /* --- змейка --- */
 function initSnake(){
@@ -373,26 +374,137 @@ const INV_SPELLS=[
  {n:'Sun Strike',c:['E','E','E']},{n:'Deafening Blast',c:['Q','W','E']}
 ];
 function initInvoker(){
-  let orbs=[],target=null,score=0,streak=0,left=30,timer=null,playing=false;
-  const orbBox=()=>{$('#invOrbs').innerHTML=[0,1,2].map(i=>{const o=orbs[i];return o?`<span class="${o}">${o}</span>`:'<span></span>';}).join('');};
+  // режимы: learn (по порядку, с подсказками) · race (10 на время) · time (60 сек) · survival (3 жизни) · combo (связки)
+  const COMBOS=[['Tornado','EMP'],['Cold Snap','Forge Spirit'],['Ice Wall','Chaos Meteor'],['Tornado','Chaos Meteor','Deafening Blast'],['EMP','Tornado','Sun Strike']];
+  const RANKS=[[6,'GRANDMASTER'],[8,'MASTER'],[12,'PLATINUM'],[15,'GOLD'],[20,'SILVER'],[1e9,'BRONZE']];
+  let mode='learn',blind=false;
+  let orbs=[],slots=[],queue=[],qi=0,score=0,lives=3,left=60,timer=null,active=false;
+  let t0=0,presses=0,targetSince=0;
+  let binds=store.get('invBinds',{Q:'q',W:'w',E:'e',R:'r'});
+  let soundOn=store.get('invSound',true);
+  let bindCapture=null;
+  const byName=n=>INV_SPELLS.find(s=>s.n===n);
+  const key=s=>[...s.c].sort().join('');
   const needTxt=t=>[...t.c].sort().join(' + ');
-  function pick(){target=INV_SPELLS[(Math.random()*INV_SPELLS.length)|0];$('#invSpell').textContent=target.n;$('#invNeed').textContent='Нужно: '+needTxt(target);orbs=[];orbBox();}
+  const spellOf=o=>INV_SPELLS.find(s=>key(s)=== [...o].sort().join(''));
+  function beep(f,d){if(!soundOn)return;try{const C=window.AudioContext||window.webkitAudioContext;beep._c=beep._c||new C();const c=beep._c,o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=f;g.gain.value=0.06;o.connect(g);g.connect(c.destination);o.start();g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+d);o.stop(c.currentTime+d);}catch{}}
+  const okS=()=>beep(660,0.09),errS=()=>beep(180,0.16);
   function msg(t,cls){const m=$('#invMsg');m.textContent=t;m.className='inv-msg'+(cls?' '+cls:'');}
-  function best(){$('#invBest').textContent=store.get('invBest',null)??'—';refreshScores();}
-  function start(){score=0;streak=0;left=30;playing=true;$('#invScore').textContent='0';$('#invStreak').textContent='0';$('#invTime').textContent='30';clearInterval(timer);pick();msg('Набери QWE и жми R');timer=setInterval(()=>{if(!$('#stage-invoker').classList.contains('on'))return;left--;$('#invTime').textContent=left;if(left<=0){playing=false;clearInterval(timer);msg('Время! Счёт: '+score,score>0?'good':'');const b=store.get('invBest',null);if(b==null||score>b){store.set('invBest',score);toast('Новый рекорд: '+score+'!');}best();}},1000);}
-  function press(o){if(!playing)start();if(orbs.length>=3)orbs.shift();orbs.push(o);orbBox();}
-  function invoke(){
-    if(!playing){start();return;}
-    if(orbs.length<3){msg('Сначала набери 3 орбы!','bad');return;}
-    const got=[...orbs].sort().join(''),want=[...target.c].sort().join('');
-    if(got===want){score++;streak++;$('#invScore').textContent=score;$('#invStreak').textContent=streak;msg('Верно. '+target.n,'good');pick();}
-    else{streak=0;$('#invStreak').textContent='0';msg('Мимо. Надо было: '+needTxt(target),'bad');}
+  function orbBox(){$('#invOrbs').innerHTML=[0,1,2].map(i=>{const o=orbs[i];return o?`<span class="${o}">${o}</span>`:'<span></span>';}).join('');
+    const pv=$('#invPrev');
+    if(orbs.length===3&&!blindAll()){const s=spellOf(orbs);pv.textContent=s?('Будет: '+s.n+' · '+needTxt(s)):'—';}
+    else pv.textContent='—';
   }
-  document.querySelectorAll('.inv-key[data-orb]').forEach(b=>{b.onclick=()=>press(b.dataset.orb);});
+  function blindAll(){return blind&&(mode==='race'||mode==='combo');}
+  function slotBox(){$('#invSlotD').textContent='D · '+(slots[0]||'—');$('#invSlotF').textContent='F · '+(slots[1]||'—');}
+  function statHit(name,ok,ms){
+    const st=store.get('invStats',{casts:0,ok:0,per:{}});
+    st.casts++;if(ok)st.ok++;
+    st.per[name]=st.per[name]||{ok:0,total:0,ms:0};
+    st.per[name].total++;if(ok)st.per[name].ok++;
+    if(ok)st.per[name].ms+=ms;
+    store.set('invStats',st);
+  }
+  function renderStats(){
+    const st=store.get('invStats',{casts:0,ok:0,per:{}});
+    const acc=st.casts?Math.round(st.ok/st.casts*100):0;
+    const rows=Object.entries(st.per).map(([n,v])=>({n,acc:v.total?Math.round(v.ok/v.total*100):0,ms:v.ok?Math.round(v.ms/v.ok):null,total:v.total}));
+    rows.sort((a,b)=>a.acc-b.acc||b.total-a.total);
+    const weak=rows.filter(r=>r.total>=2).slice(0,3);
+    const rb=store.get('invRaceBest',[]);
+    const tb=store.get('invTimeBest',null);
+    $('#invStats').innerHTML=`Кастов: <b>${st.casts}</b> · точность: <b>${acc}%</b>`+
+      (weak.length?` · слабые места: <b>${weak.map(w=>w.n+' '+w.acc+'%').join(', ')}</b>`:'')+
+      (rb.length?`<br>Гонка топ: <b>${rb.slice(0,3).map(t=>(t/1000).toFixed(1)+' с').join(' · ')}</b>`:'')+
+      (tb!=null?`<br>Минута рекорд: <b>${tb}</b>`:'');
+    $('#invRef').innerHTML=INV_SPELLS.map(s=>{
+      const v=st.per[s.n];const w=v&&v.total>=2&&(v.ok/v.total)<0.8;
+      return `<div class="${w?'weak':''}"><b>${s.n}</b><code>${needTxt(s)}</code></div>`;
+    }).join('');
+    refreshScores();
+  }
+  function rankOf(sec){for(const[t,r]of RANKS)if(sec<=t)return r;return 'BRONZE';}
+  function setTarget(t,seqInfo){
+    targetSince=performance.now();
+    $('#invSpell').textContent=t.n;
+    $('#invNeed').textContent=(blindAll()?'Комбинация скрыта':'Нужно: '+needTxt(t))+(seqInfo||'');
+    orbs=[];orbBox();
+  }
+  function seqBar(){
+    if(mode!=='combo'){$('#invSeq').innerHTML='';return;}
+    $('#invSeq').innerHTML=queue.map((n,i)=>`<span class="${i<qi?'done':(i===qi?'cur':'')}">${n}</span>`).join('');
+  }
+  function stopTimer(){clearInterval(timer);timer=null;}
+  function startMode(m){
+    mode=m;stopTimer();active=true;presses=0;slots=[];slotBox();
+    orbs=[];orbBox();score=0;lives=3;
+    document.querySelectorAll('#invModes .inv-mode').forEach(b=>b.classList.toggle('active',b.dataset.m===m));
+    $('#invModeName').textContent={learn:'Обучение · все 10 по порядку',race:'Гонка · все 10 на время'+(blind?' · вслепую':''),time:'Минута · максимум кастов',survival:'Выживание · 3 жизни',combo:'Комбо · связки как в игре'}[m];
+    if(m==='learn'){queue=INV_SPELLS.map(s=>s.n);qi=0;setTarget(byName(queue[0]),' · 1/10');seqBar();msg('Повторяй комбинации. Без таймера.');}
+    if(m==='race'){queue=[...INV_SPELLS].sort(()=>Math.random()-.5).map(s=>s.n);qi=0;t0=performance.now();setTarget(byName(queue[0]),' · 1/10');seqBar();msg('Все 10 спеллов. Время пошло.');}
+    if(m==='time'){left=60;queue=[];pickRandom();msg('60 секунд. Максимум верных кастов.');
+      timer=setInterval(()=>{if(!$('#stage-invoker').classList.contains('on'))return;left--;if(left<=0){stopTimer();active=false;const b=store.get('invTimeBest',null);if(b==null||score>b){store.set('invTimeBest',score);toast('Новый рекорд минуты: '+score);}msg('Время. Кастов: '+score,score>0?'good':'');renderStats();}},1000);}
+    if(m==='survival'){queue=[];pickRandom();msg('3 жизни. Ошибка сжигает жизнь.');}
+    if(m==='combo'){queue=[...COMBOS[(Math.random()*COMBOS.length)|0]];qi=0;presses=0;t0=performance.now();setTarget(byName(queue[0]));seqBar();msg('Связка целиком. Лишние нажатия режут эффективность.');}
+  }
+  function pickRandom(){const t=INV_SPELLS[(Math.random()*INV_SPELLS.length)|0];setTarget(t);}
+  function press(o){
+    if(!active)startMode(mode);
+    if(orbs.length>=3)orbs.shift();
+    orbs.push(o);presses++;orbBox();beep(440,0.05);
+  }
+  function invoke(){
+    if(!active){startMode(mode);return;}
+    if(orbs.length<3){msg('Сначала 3 орбы.','bad');errS();return;}
+    if(!target){pickRandom();}
+    const s=spellOf(orbs);
+    slots.push(s?s.n:'?');if(slots.length>2)slots.shift();slotBox();
+    presses++;
+    const ms=Math.round(performance.now()-targetSince);
+    const good=s&&s.n===target.n;
+    statHit(target.n,!!good,ms);
+    if(good){
+      okS();score++;
+      if(mode==='learn'){qi++;if(qi>=queue.length){msg('Все 10 пройдены. Так держать.', 'good');active=false;renderStats();return;}setTarget(byName(queue[qi]),` · ${qi+1}/10`);}
+      else if(mode==='race'){qi++;if(qi>=queue.length){const sec=(performance.now()-t0)/1000;stopTimer();active=false;const rb=store.get('invRaceBest',[]);rb.push(Math.round(sec*1000));rb.sort((a,b)=>a-b);store.set('invRaceBest',rb.slice(0,5));msg(`Финиш: ${sec.toFixed(1)} с · ранг ${rankOf(sec)}`,'good');renderStats();return;}setTarget(byName(queue[qi]),` · ${qi+1}/10`);}
+      else if(mode==='time'){pickRandom();msg(`Верно · ${ms} мс`,'good');}
+      else if(mode==='survival'){pickRandom();msg(`Верно · серия ${score}`,'good');}
+      else if(mode==='combo'){qi++;seqBar();if(qi>=queue.length){const sec=(performance.now()-t0)/1000;const par=queue.length*4;const eff=Math.min(100,Math.round(par/presses*100));stopTimer();active=false;msg(`Связка за ${sec.toFixed(1)} с · эффективность ${eff}%`,eff>=90?'good':'');renderStats();return;}setTarget(byName(queue[qi]));}
+    }else{
+      errS();
+      if(mode==='survival'){lives--;if(lives<=0){active=false;msg(`Игра окончена. Счёт: ${score}`,'bad');renderStats();return;}msg(`Мимо. Надо: ${needTxt(target)} · жизней: ${lives}`,'bad');}
+      else msg(`Мимо. Надо: ${needTxt(target)}`,'bad');
+    }
+    renderStats();
+  }
+  // клавиши на экране
+  $('#invKeyQ').onclick=()=>press('Q');$('#invKeyW').onclick=()=>press('W');$('#invKeyE').onclick=()=>press('E');
   $('#invInvoke').onclick=invoke;
-  addEventListener('keydown',e=>{if(!$('#stage-invoker').classList.contains('on'))return;const k=e.key.toLowerCase();if(k==='q'||k==='й')press('Q');else if(k==='w'||k==='ц')press('W');else if(k==='e'||k==='у')press('E');else if(k==='r'||k==='к')invoke();});
-  $('#invRestart').onclick=start;
-  orbBox();pick();best();
+  // режимы
+  document.querySelectorAll('#invModes .inv-mode').forEach(b=>b.onclick=()=>startMode(b.dataset.m));
+  $('#invRestart').onclick=()=>startMode(mode);
+  $('#invBlind').onclick=e=>{blind=!blind;e.target.textContent='Подсказки: '+(blind?'выкл':'вкл');startMode(mode);};
+  $('#invSound').onclick=e=>{soundOn=!soundOn;store.set('invSound',soundOn);e.target.textContent='Звук: '+(soundOn?'вкл':'выкл');};
+  $('#invBlind').textContent='Подсказки: '+(blind?'выкл':'вкл');
+  $('#invSound').textContent='Звук: '+(soundOn?'вкл':'выкл');
+  // кастомные бинды
+  const BNAMES={Q:'Quas',W:'Wex',E:'Exort',R:'Invoke'};
+  function bindBox(){
+    $('#invBinds').innerHTML=['Q','W','E','R'].map(k=>`<button data-k="${k}">${binds[k].toUpperCase()}<small>${BNAMES[k]}</small></button>`).join('');
+    document.querySelectorAll('#invBinds button').forEach(b=>b.onclick=()=>{
+      bindCapture=b.dataset.k;b.innerHTML='?<small>нажми клавишу</small>';
+    });
+    const keys={Q:'#invKeyQ',W:'#invKeyW',E:'#invKeyE',R:'#invInvoke'};
+    for(const k of ['Q','W','E','R']){const el=$(keys[k]);el.childNodes[0].nodeValue=binds[k].toUpperCase();}
+  }
+  addEventListener('keydown',e=>{
+    if(!$('#stage-invoker').classList.contains('on'))return;
+    const k=e.key.toLowerCase();
+    if(bindCapture){e.preventDefault();const used=Object.keys(binds).find(x=>x!==bindCapture&&binds[x]===k);if(used)binds[used]=binds[bindCapture];binds[bindCapture]=k;store.set('invBinds',binds);bindCapture=null;bindBox();return;}
+    if(k===binds.Q)press('Q');else if(k===binds.W)press('W');else if(k===binds.E)press('E');else if(k===binds.R)invoke();
+  });
+  bindBox();slotBox();orbBox();renderStats();
+  startMode('learn');
 }
 
 /* --- покер: видеопокер «валеты и выше», ставка 5 --- */

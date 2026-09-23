@@ -155,22 +155,39 @@
   <div class="stage" id="stage-invoker">
     <div class="stage-top"><button class="btn ghost" data-back>← Игры</button><button class="btn primary" id="invRestart">Заново</button></div>
     <div class="glass panel inv">
-      <div class="score-row"><span class="chip2">Счёт <b id="invScore">0</b></span><span class="chip2">Серия <b id="invStreak">0</b></span><span class="chip2">Рекорд <b id="invBest">—</b></span><span class="chip2">Время <b id="invTime">30</b>с</span></div>
+      <div class="inv-modes" id="invModes">
+        <button class="inv-mode" data-m="learn">Обучение</button>
+        <button class="inv-mode" data-m="race">Гонка</button>
+        <button class="inv-mode" data-m="time">Минута</button>
+        <button class="inv-mode" data-m="survival">Жизни</button>
+        <button class="inv-mode" data-m="combo">Комбо</button>
+      </div>
+      <div class="inv-sub">
+        <button class="mini-btn" id="invBlind">Подсказки: вкл</button>
+        <button class="mini-btn" id="invSound">Звук: вкл</button>
+      </div>
       <div class="inv-target">
-        <div class="lab">Скастуй это:</div>
+        <div class="lab" id="invModeName">Обучение</div>
         <div class="inv-spell" id="invSpell">—</div>
         <div class="inv-need" id="invNeed">—</div>
+        <div class="inv-seq" id="invSeq"></div>
       </div>
+      <div class="inv-slots"><span class="slot" id="invSlotD">D · —</span><span class="slot" id="invSlotF">F · —</span></div>
       <div class="lab">Твои орбы:</div>
       <div class="inv-orbs" id="invOrbs"><span></span><span></span><span></span></div>
-      <div class="inv-msg" id="invMsg">Набери QWE и жми R</div>
+      <div class="inv-prev" id="invPrev">—</div>
+      <div class="inv-msg" id="invMsg">Выбери режим выше</div>
       <div class="inv-keys">
-        <button class="inv-key q" data-orb="Q">Q<span>Quas</span></button>
-        <button class="inv-key w" data-orb="W">W<span>Wex</span></button>
-        <button class="inv-key e" data-orb="E">E<span>Exort</span></button>
+        <button class="inv-key q" id="invKeyQ">Q<span>Quas</span></button>
+        <button class="inv-key w" id="invKeyW">W<span>Wex</span></button>
+        <button class="inv-key e" id="invKeyE">E<span>Exort</span></button>
         <button class="inv-key r" id="invInvoke">R<span>Invoke</span></button>
       </div>
-      <p class="center muted">Клавиши Q / W / E / R тоже работают · 30 секунд на серию</p>
+      <div class="lab">Клавиши <span class="muted">(тап — переназначить)</span>:</div>
+      <div class="inv-binds" id="invBinds"></div>
+      <div class="inv-ref" id="invRef"></div>
+      <div class="inv-stats" id="invStats"></div>
+      <p class="center muted">Гонка — все 10 спеллов на время · ранги как у про-тренажёров</p>
     </div>
   </div>
 </section>
@@ -207,7 +224,7 @@
 
 </main>
 
-<footer class="footer">v6 · тёмный карнавал: дири-джампер, взлом замка, покер</footer>
+<footer class="footer">v7 · инвокер pro: 5 режимов, ранги, статистика</footer>
 <nav class="bottomnav">
   <button class="bnav active" data-view="home"><small>Главная</small></button>
   <button class="bnav" data-view="schedule"><small>Пары</small></button>
