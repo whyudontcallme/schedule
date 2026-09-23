@@ -17,18 +17,18 @@
 
 <header class="topbar">
   <div class="topbar-inner glass">
-    <div class="brand"><div class="logo">R</div><div><strong>Расписание</strong><small>сен–дек 2026 · авто чёт/нечет</small></div></div>
+    <div class="brand"><div class="logo">R</div><div><strong>Расписание</strong><small>осень — зима · 2026</small></div></div>
     <div class="top-actions">
       <button id="parityBtn" class="parity-btn" title="Авто-режим. Нажми чтобы посмотреть другую неделю">…</button>
       <button id="themeBtn" class="icon-btn" aria-label="Тема">◐</button>
     </div>
   </div>
-  <nav class="tabbar glass-soft" id="tabbar">
-    <button class="tabbtn active" data-view="home">⌂ Главная</button>
-    <button class="tabbtn" data-view="schedule">▤ Пары</button>
-    <button class="tabbtn" data-view="calendar">▦ Календарь</button>
-    <button class="tabbtn" data-view="games">◆ Игры</button>
-    <button class="tabbtn" data-view="tools">✦ Сервисы</button>
+  <nav class="tabbar" id="tabbar">
+    <button class="tabbtn active" data-view="home">Главная</button>
+    <button class="tabbtn" data-view="schedule">Пары</button>
+    <button class="tabbtn" data-view="calendar">Календарь</button>
+    <button class="tabbtn" data-view="games">Игры</button>
+    <button class="tabbtn" data-view="tools">Сервисы</button>
   </nav>
 </header>
 
@@ -57,7 +57,7 @@
     <div class="stat glass-soft"><b id="stNext">—</b><span>след. пара</span></div>
     <div class="stat glass-soft"><b id="stWeek">0</b><span>пар на неделе</span></div>
   </div>
-  <div class="section-title">Расписание на сегодня <button class="mini-btn" id="copyToday">⧉ копировать</button></div>
+  <div class="section-title">Расписание на сегодня <button class="mini-btn" id="copyToday">Копировать</button></div>
   <div class="timeline" id="todayList"></div>
 </section>
 
@@ -89,13 +89,13 @@
 <!-- GAMES -->
 <section class="view" id="view-games">
   <div id="gamesHub" class="grid3">
-    <div class="game-card glass-soft" data-game="snake"><span class="ge">🐍</span><h3>Змейка</h3><p>Стрелки / WASD / свайп</p><div class="gs" id="sc-snake">Рекорд: 0</div></div>
-    <div class="game-card glass-soft" data-game="ttt"><span class="ge">✕⭘</span><h3>Крестики-нолики</h3><p>Двое на одном экране</p><div class="gs" id="sc-ttt">0 : 0</div></div>
-    <div class="game-card glass-soft" data-game="g2048"><span class="ge">🔢</span><h3>2048</h3><p>Собери 2048</p><div class="gs" id="sc-2048">Рекорд: 0</div></div>
-    <div class="game-card glass-soft" data-game="memory"><span class="ge">🧠</span><h3>Memory</h3><p>Найди все пары</p><div class="gs" id="sc-memory">—</div></div>
-    <div class="game-card glass-soft" data-game="react"><span class="ge">⚡</span><h3>Реакция</h3><p>мс точности</p><div class="gs" id="sc-react">—</div></div>
-    <div class="game-card glass-soft" data-game="bj"><span class="ge">🃏</span><h3>Блэкджек</h3><p>21 против дилера</p><div class="gs" id="sc-bj">0 / 0</div></div>
-    <div class="game-card glass-soft" data-game="invoker"><span class="ge">🔮</span><h3>Инвокер</h3><p>QWE + Invoke на скорость</p><div class="gs" id="sc-invoker">Рекорд: —</div></div>
+    <div class="game-card" data-game="snake"><span class="ge">SN</span><h3>Змейка</h3><p>Стрелки / WASD / свайп</p><div class="gs" id="sc-snake">Рекорд: 0</div></div>
+    <div class="game-card" data-game="ttt"><span class="ge">XO</span><h3>Крестики-нолики</h3><p>Двое на одном экране</p><div class="gs" id="sc-ttt">0 : 0</div></div>
+    <div class="game-card" data-game="g2048"><span class="ge">48</span><h3>2048</h3><p>Собери 2048</p><div class="gs" id="sc-2048">Рекорд: 0</div></div>
+    <div class="game-card" data-game="memory"><span class="ge">MM</span><h3>Memory</h3><p>Найди все пары</p><div class="gs" id="sc-memory">—</div></div>
+    <div class="game-card" data-game="react"><span class="ge">RX</span><h3>Реакция</h3><p>Миллисекунды точности</p><div class="gs" id="sc-react">—</div></div>
+    <div class="game-card" data-game="bj"><span class="ge">BJ</span><h3>Блэкджек</h3><p>21 против дилера</p><div class="gs" id="sc-bj">0 / 0</div></div>
+    <div class="game-card" data-game="invoker"><span class="ge">IN</span><h3>Инвокер</h3><p>QWE + Invoke на скорость</p><div class="gs" id="sc-invoker">Рекорд: —</div></div>
   </div>
 
   <div class="stage" id="stage-snake">
@@ -193,13 +193,13 @@
 
 </main>
 
-<footer class="footer">v4 · авто чёт/нечет · инвокер-тренажёр внутри ◆ Игры</footer>
+<footer class="footer">v5 · Enfants-inspired edition · авто чёт/нечет</footer>
 <nav class="bottomnav">
-  <button class="bnav active" data-view="home"><span>⌂</span><small>Главная</small></button>
-  <button class="bnav" data-view="schedule"><span>▤</span><small>Пары</small></button>
-  <button class="bnav" data-view="calendar"><span>▦</span><small>Календарь</small></button>
-  <button class="bnav" data-view="games"><span>◆</span><small>Игры</small></button>
-  <button class="bnav" data-view="tools"><span>✦</span><small>Сервисы</small></button>
+  <button class="bnav active" data-view="home"><small>Главная</small></button>
+  <button class="bnav" data-view="schedule"><small>Пары</small></button>
+  <button class="bnav" data-view="calendar"><small>Календарь</small></button>
+  <button class="bnav" data-view="games"><small>Игры</small></button>
+  <button class="bnav" data-view="tools"><small>Сервисы</small></button>
 </nav>
 
 <div class="toast" id="toast"></div>
