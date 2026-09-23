@@ -1,127 +1,185 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Моё расписание — пары, аудитории, чёт/нечет</title>
-<meta name="description" content="Студенческое расписание: сегодня, неделя, чёт/нечет, аудитории, преподаватели. Быстро, удобно с телефона, работает офлайн.">
-<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#f6f7fb" media="(prefers-color-scheme: light)">
+<title>Расписание — чёт/нечет авто, календарь, игры, инструменты</title>
+<meta name="description" content="Студенческое расписание: авто чёт/нечет, сегодня/неделя/календарь, игры, калькулятор и таймеры. Быстро с телефона, работает офлайн.">
+<meta name="theme-color" content="#070a14">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%234f6bff'/%3E%3Ctext x='32' y='42' font-size='32' text-anchor='middle' fill='white' font-family='system-ui' font-weight='700'%3ER%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%234f6bff'/%3E%3Cstop offset='1' stop-color='%239b6bff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='32' y='43' font-size='32' text-anchor='middle' fill='white' font-family='system-ui' font-weight='700'%3ER%3C/text%3E%3C/svg%3E">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-<div class="bg" aria-hidden="true"></div>
+<div class="bg" aria-hidden="true"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
 
 <header class="topbar">
-  <div class="topbar-inner">
-    <div class="brand">
-      <div class="brand-logo">R</div>
-      <div class="brand-text">
-        <strong>Моё расписание</strong>
-        <span id="semesterLine">сентябрь – декабрь 2026</span>
-      </div>
-    </div>
+  <div class="topbar-inner glass">
+    <div class="brand"><div class="logo">R</div><div><strong>Расписание</strong><small>сен–дек 2026 · авто чёт/нечет</small></div></div>
     <div class="top-actions">
-      <button id="parityBtn" class="pill" title="Нажми, чтобы посмотреть другую неделю">—</button>
-      <button id="themeBtn" class="icon-btn" title="Тема" aria-label="Переключить тему">◐</button>
+      <button id="parityBtn" class="parity-btn" title="Авто-режим. Нажми чтобы посмотреть другую неделю">…</button>
+      <button id="themeBtn" class="icon-btn" aria-label="Тема">◐</button>
     </div>
   </div>
-  <div class="clock-row">
-    <div class="clock" id="clock">--:--:--</div>
-    <div class="date-line"><span id="dateLine">—</span><span class="dot">•</span><span id="parityLine">—</span></div>
-  </div>
+  <nav class="tabbar glass-soft" id="tabbar">
+    <button class="tabbtn active" data-view="home">⌂ Главная</button>
+    <button class="tabbtn" data-view="schedule">▤ Пары</button>
+    <button class="tabbtn" data-view="calendar">▦ Календарь</button>
+    <button class="tabbtn" data-view="games">◆ Игры</button>
+    <button class="tabbtn" data-view="tools">✦ Сервисы</button>
+  </nav>
 </header>
 
 <main class="wrap">
-  <!-- NOW / NEXT -->
-  <section id="nowCard" class="card now-card"></section>
 
-  <!-- STATS -->
-  <section class="stats">
-    <div class="stat"><b id="stToday">0</b><span>пар сегодня</span></div>
-    <div class="stat"><b id="stLeft">0</b><span>осталось</span></div>
-    <div class="stat"><b id="stNext">—</b><span>след. пара</span></div>
-    <div class="stat"><b id="stWeek">0</b><span>пар на неделе</span></div>
-  </section>
-
-  <!-- TABS -->
-  <nav class="tabs" role="tablist">
-    <button class="tab active" data-tab="today" role="tab">Сегодня</button>
-    <button class="tab" data-tab="tomorrow" role="tab">Завтра</button>
-    <button class="tab" data-tab="week" role="tab">Неделя</button>
-    <button class="tab" data-tab="search" role="tab">Поиск</button>
-  </nav>
-
-  <!-- TODAY -->
-  <section id="tab-today" class="tabpanel active">
-    <div id="todayList" class="timeline"></div>
-    <div class="row-actions">
-      <button id="copyToday" class="btn">⧉ Скопировать день</button>
-      <button id="openTomorrow" class="btn ghost">Завтра →</button>
+<!-- HOME -->
+<section class="view active" id="view-home">
+  <div class="hero glass">
+    <div>
+      <div class="clock-big" id="clock">00:00:00</div>
+      <div class="clock-sub"><span id="dateLine">—</span><span class="badge auto" id="parityBadge">АВТО · —</span></div>
+      <div class="parity-note" id="parityNote">Считаю неделю автоматически</div>
     </div>
-  </section>
-
-  <!-- TOMORROW -->
-  <section id="tab-tomorrow" class="tabpanel">
-    <div id="tomorrowTitle" class="day-title"></div>
-    <div id="tomorrowList" class="timeline"></div>
-  </section>
-
-  <!-- WEEK -->
-  <section id="tab-week" class="tabpanel">
-    <div class="week-switch">
-      <button class="seg active" data-w="auto">Авто</button>
-      <button class="seg" data-w="odd">Нечётная</button>
-      <button class="seg" data-w="even">Чётная</button>
+    <div class="now-pill glass-soft">
+      <div class="lab" id="nowLab">Сейчас</div>
+      <h4 id="nowTitle">…</h4>
+      <div class="meta" id="nowMeta">—</div>
+      <div class="progress"><i id="nowProg"></i></div>
+      <div class="count" id="nowCount">—</div>
     </div>
-    <div id="weekList" class="week-list"></div>
-  </section>
+  </div>
+  <div class="section-title">Сегодня в цифрах</div>
+  <div class="grid4">
+    <div class="stat glass-soft"><b id="stToday">0</b><span>пар сегодня</span></div>
+    <div class="stat glass-soft"><b id="stLeft">0</b><span>осталось</span></div>
+    <div class="stat glass-soft"><b id="stNext">—</b><span>след. пара</span></div>
+    <div class="stat glass-soft"><b id="stWeek">0</b><span>пар на неделе</span></div>
+  </div>
+  <div class="section-title">Расписание на сегодня <button class="mini-btn" id="copyToday">⧉ копировать</button></div>
+  <div class="timeline" id="todayList"></div>
+</section>
 
-  <!-- SEARCH -->
-  <section id="tab-search" class="tabpanel">
-    <input id="q" class="search" type="search" placeholder="Предмет, преподаватель, аудитория…  напр. Химия / 2.415 / Пеккер" autocomplete="off">
-    <div class="chips">
-      <button class="chip" data-q="Лекция">Лекции</button>
-      <button class="chip" data-q="Практика">Практики</button>
-      <button class="chip" data-q="Лабораторная">Лабы</button>
-      <button class="chip" data-q="2.">Аудитории 2.*</button>
-      <button class="chip" data-q="">Сбросить</button>
+<!-- SCHEDULE -->
+<section class="view" id="view-schedule">
+  <div class="day-tabs" id="dayTabs"></div>
+  <div class="week-switch">
+    <button class="seg" data-w="auto">Авто</button>
+    <button class="seg" data-w="odd">Нечёт</button>
+    <button class="seg" data-w="even">Чёт</button>
+  </div>
+  <div class="parity-line" id="schedParity">—</div>
+  <input id="q" class="search" type="search" placeholder="Поиск: Химия, Пеккер, 2.415…" autocomplete="off">
+  <div class="timeline" id="schedList" style="margin-top:10px"></div>
+</section>
+
+<!-- CALENDAR -->
+<section class="view" id="view-calendar">
+  <div class="glass cal-box">
+    <div class="cal-head"><h3 id="calTitle">—</h3>
+      <div><button class="icon-btn" id="calPrev">‹</button> <button class="icon-btn" id="calToday">•</button> <button class="icon-btn" id="calNext">›</button></div>
     </div>
-    <div id="searchList" class="timeline"></div>
-  </section>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-legend"><span><i class="dot-odd"></i>нечёт</span><span><i class="dot-even"></i>чёт</span><span><i class="dot-free"></i>выходной</span></div>
+  </div>
+  <div class="glass-soft cal-detail" id="calDetail"></div>
+</section>
 
-  <section class="card hint">
-    <h3>Как пользоваться с телефона</h3>
-    <ol>
-      <li>Выложишь на GitHub Pages → откроешь ссылку с телефона.</li>
-      <li>В браузере нажми <b>«Поделиться» → «На экран Домой»</b> — будет как приложение.</li>
-      <li>Сайт работает <b>офлайн</b> после первого открытия.</li>
-    </ol>
-    <p class="muted">Чётность считается от понедельника 31.08.2026 (нечётная). Пары: 1) 09:15–10:50 · 2) 11:10–12:45 · 3) 13:30–15:05 · 4) 15:15–16:50 · 5) 17:00–18:35</p>
-  </section>
+<!-- GAMES -->
+<section class="view" id="view-games">
+  <div id="gamesHub" class="grid3">
+    <div class="game-card glass-soft" data-game="snake"><span class="ge">🐍</span><h3>Змейка</h3><p>Стрелки / WASD / свайп</p><div class="gs" id="sc-snake">Рекорд: 0</div></div>
+    <div class="game-card glass-soft" data-game="ttt"><span class="ge">✕⭘</span><h3>Крестики-нолики</h3><p>Двое на одном экране</p><div class="gs" id="sc-ttt">0 : 0</div></div>
+    <div class="game-card glass-soft" data-game="g2048"><span class="ge">🔢</span><h3>2048</h3><p>Собери 2048</p><div class="gs" id="sc-2048">Рекорд: 0</div></div>
+    <div class="game-card glass-soft" data-game="memory"><span class="ge">🧠</span><h3>Memory</h3><p>Найди все пары</p><div class="gs" id="sc-memory">—</div></div>
+    <div class="game-card glass-soft" data-game="react"><span class="ge">⚡</span><h3>Реакция</h3><p>мс точности</p><div class="gs" id="sc-react">—</div></div>
+    <div class="game-card glass-soft" data-game="bj"><span class="ge">🃏</span><h3>Блэкджек</h3><p>21 против дилера</p><div class="gs" id="sc-bj">0 / 0</div></div>
+  </div>
 
-  <footer class="footer">Сделано по твоему расписанию · сентябрь–декабрь 2026 · v2</footer>
+  <div class="stage" id="stage-snake">
+    <div class="stage-top"><button class="btn ghost" data-back>← Игры</button><button class="btn primary" id="snakeRestart">Заново</button></div>
+    <div class="glass panel"><div class="score-row"><span class="chip2">Счёт <b id="snakeScore">0</b></span><span class="chip2">Рекорд <b id="snakeBest">0</b></span></div>
+    <canvas id="snakeCanvas" width="400" height="400"></canvas>
+    <div class="dpad"><button data-dir="up">▲</button><button data-dir="left">◀</button><button data-dir="down">▼</button><button data-dir="right">▶</button></div></div>
+  </div>
+
+  <div class="stage" id="stage-ttt">
+    <div class="stage-top"><button class="btn ghost" data-back>← Игры</button><button class="btn primary" id="tttRestart">Заново</button></div>
+    <div class="glass panel"><div class="score-row"><span class="chip2">✕ <b id="tttX">0</b></span><span class="chip2">○ <b id="tttO">0</b></span><span class="chip2">Ничьи <b id="tttD">0</b></span></div>
+    <div class="center" id="tttStatus">Ход: ✕</div><div class="ttt" id="tttGrid"></div></div>
+  </div>
+
+  <div class="stage" id="stage-g2048">
+    <div class="stage-top"><button class="btn ghost" data-back>← Игры</button><button class="btn primary" id="g2048Restart">Заново</button></div>
+    <div class="glass panel"><div class="score-row"><span class="chip2">Счёт <b id="g2048Score">0</b></span><span class="chip2">Рекорд <b id="g2048Best">0</b></span></div>
+    <div class="g2048" id="g2048Grid"></div><p class="center muted">Стрелки / WASD / свайп</p></div>
+  </div>
+
+  <div class="stage" id="stage-memory">
+    <div class="stage-top"><button class="btn ghost" data-back>← Игры</button><button class="btn primary" id="memRestart">Заново</button></div>
+    <div class="glass panel"><div class="score-row"><span class="chip2">Ходы <b id="memMoves">0</b></span><span class="chip2">Время <b id="memTime">0</b>с</span><span class="chip2">Лучший <b id="memBest">—</b></span></div>
+    <div class="mem" id="memGrid"></div></div>
+  </div>
+
+  <div class="stage" id="stage-react">
+    <div class="stage-top"><button class="btn ghost" data-back>← Игры</button><button class="btn primary" id="reactReset">Сброс</button></div>
+    <div class="glass panel"><div class="score-row"><span class="chip2">Рекорд <b id="reactBest">—</b> мс</span></div>
+    <div class="react-box" id="reactBox">Нажми, чтобы начать</div><div class="react-list" id="reactList"></div></div>
+  </div>
+
+  <div class="stage" id="stage-bj">
+    <div class="stage-top"><button class="btn ghost" data-back>← Игры</button><button class="btn primary" id="bjNew">Новая раздача</button></div>
+    <div class="glass panel"><div class="score-row"><span class="chip2">Победы <b id="bjW">0</b></span><span class="chip2">Поражения <b id="bjL">0</b></span><span class="chip2">Ничьи <b id="bjP">0</b></span></div>
+    <div class="center muted">Дилер (<span id="bjDS">0</span>)</div><div class="bj-row" id="bjD"></div>
+    <div class="center muted">Вы (<span id="bjPS">0</span>)</div><div class="bj-row" id="bjPRow"></div>
+    <div class="row"><button class="btn primary" id="bjHit">Ещё</button><button class="btn" id="bjStand">Хватит</button></div>
+    <p class="center" id="bjMsg"></p></div>
+  </div>
+</section>
+
+<!-- TOOLS -->
+<section class="view" id="view-tools">
+  <div class="section-title">Калькулятор</div>
+  <div class="calc-grid">
+    <div>
+      <div class="glass-soft calc-display"><div class="calc-expr" id="calcExpr">&nbsp;</div><div class="calc-res" id="calcRes">0</div></div>
+      <div class="keys" id="keys">
+        <button class="key fn" data-k="clear">C</button><button class="key fn" data-k="back">⌫</button><button class="key fn" data-k="pct">%</button><button class="key op" data-k="/">÷</button>
+        <button class="key" data-k="7">7</button><button class="key" data-k="8">8</button><button class="key" data-k="9">9</button><button class="key op" data-k="*">×</button>
+        <button class="key" data-k="4">4</button><button class="key" data-k="5">5</button><button class="key" data-k="6">6</button><button class="key op" data-k="-">−</button>
+        <button class="key" data-k="1">1</button><button class="key" data-k="2">2</button><button class="key" data-k="3">3</button><button class="key op" data-k="+">+</button>
+        <button class="key zero" data-k="0">0</button><button class="key" data-k=".">,</button><button class="key eq" data-k="=">=</button>
+      </div>
+    </div>
+    <div class="glass-soft hist"><h4>История</h4><div id="calcHist"></div></div>
+  </div>
+  <div class="section-title">Таймеры</div>
+  <div class="grid3">
+    <div class="glass tool"><h3>Таймер</h3><div class="big" id="timerV">00:05:00</div>
+      <div class="hms"><input id="tH" type="number" min="0" max="23" value="0"><input id="tM" type="number" min="0" max="59" value="5"><input id="tS" type="number" min="0" max="59" value="0"></div>
+      <div class="row"><button class="btn primary" id="timerStart">Старт</button><button class="btn" id="timerStop">Стоп</button></div></div>
+    <div class="glass tool"><h3>Секундомер</h3><div class="big" id="stopV">00:00.0</div>
+      <div class="row"><button class="btn primary" id="stopStart">Старт</button><button class="btn" id="stopLap">Круг</button><button class="btn" id="stopReset">Сброс</button></div>
+      <div id="laps" class="laps"></div></div>
+    <div class="glass tool"><h3>Pomodoro <span class="p-mode" id="pomoMode">работа</span></h3><div class="big" id="pomoV">25:00</div>
+      <div class="row"><button class="btn primary" id="pomoStart">Старт</button><button class="btn" id="pomoReset">Сброс</button></div>
+      <div class="hms"><label>раб.<input id="pW" type="number" value="25" min="1" max="90"></label><label>отд.<input id="pR" type="number" value="5" min="1" max="60"></label></div></div>
+  </div>
+</section>
+
 </main>
 
-<!-- Bottom nav for phones -->
 <nav class="bottomnav">
-  <button class="bnav active" data-tab="today"><span>⌂</span><small>Сегодня</small></button>
-  <button class="bnav" data-tab="tomorrow"><span>→</span><small>Завтра</small></button>
-  <button class="bnav" data-tab="week"><span>▤</span><small>Неделя</small></button>
-  <button class="bnav" data-tab="search"><span>⌕</span><small>Поиск</small></button>
+  <button class="bnav active" data-view="home"><span>⌂</span><small>Главная</small></button>
+  <button class="bnav" data-view="schedule"><span>▤</span><small>Пары</small></button>
+  <button class="bnav" data-view="calendar"><span>▦</span><small>Календарь</small></button>
+  <button class="bnav" data-view="games"><span>◆</span><small>Игры</small></button>
+  <button class="bnav" data-view="tools"><span>✦</span><small>Сервисы</small></button>
 </nav>
 
-<div id="toast" class="toast" role="status"></div>
-
+<div class="toast" id="toast"></div>
 <script src="./app.js" defer></script>
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
-}
-</script>
+<script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>
 </body>
 </html>
