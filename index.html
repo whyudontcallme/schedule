@@ -95,6 +95,7 @@
     <div class="game-card glass-soft" data-game="memory"><span class="ge">🧠</span><h3>Memory</h3><p>Найди все пары</p><div class="gs" id="sc-memory">—</div></div>
     <div class="game-card glass-soft" data-game="react"><span class="ge">⚡</span><h3>Реакция</h3><p>мс точности</p><div class="gs" id="sc-react">—</div></div>
     <div class="game-card glass-soft" data-game="bj"><span class="ge">🃏</span><h3>Блэкджек</h3><p>21 против дилера</p><div class="gs" id="sc-bj">0 / 0</div></div>
+    <div class="game-card glass-soft" data-game="invoker"><span class="ge">🔮</span><h3>Инвокер</h3><p>QWE + Invoke на скорость</p><div class="gs" id="sc-invoker">Рекорд: —</div></div>
   </div>
 
   <div class="stage" id="stage-snake">
@@ -136,6 +137,28 @@
     <div class="row"><button class="btn primary" id="bjHit">Ещё</button><button class="btn" id="bjStand">Хватит</button></div>
     <p class="center" id="bjMsg"></p></div>
   </div>
+
+  <div class="stage" id="stage-invoker">
+    <div class="stage-top"><button class="btn ghost" data-back>← Игры</button><button class="btn primary" id="invRestart">Заново</button></div>
+    <div class="glass panel inv">
+      <div class="score-row"><span class="chip2">Счёт <b id="invScore">0</b></span><span class="chip2">Серия <b id="invStreak">0</b></span><span class="chip2">Рекорд <b id="invBest">—</b></span><span class="chip2">Время <b id="invTime">30</b>с</span></div>
+      <div class="inv-target">
+        <div class="lab">Скастуй это:</div>
+        <div class="inv-spell" id="invSpell">—</div>
+        <div class="inv-need" id="invNeed">—</div>
+      </div>
+      <div class="lab">Твои орбы:</div>
+      <div class="inv-orbs" id="invOrbs"><span></span><span></span><span></span></div>
+      <div class="inv-msg" id="invMsg">Набери QWE и жми R</div>
+      <div class="inv-keys">
+        <button class="inv-key q" data-orb="Q">Q<span>Quas</span></button>
+        <button class="inv-key w" data-orb="W">W<span>Wex</span></button>
+        <button class="inv-key e" data-orb="E">E<span>Exort</span></button>
+        <button class="inv-key r" id="invInvoke">R<span>Invoke</span></button>
+      </div>
+      <p class="center muted">Клавиши Q / W / E / R тоже работают · 30 секунд на серию</p>
+    </div>
+  </div>
 </section>
 
 <!-- TOOLS -->
@@ -170,6 +193,7 @@
 
 </main>
 
+<footer class="footer">v4 · авто чёт/нечет · инвокер-тренажёр внутри ◆ Игры</footer>
 <nav class="bottomnav">
   <button class="bnav active" data-view="home"><span>⌂</span><small>Главная</small></button>
   <button class="bnav" data-view="schedule"><span>▤</span><small>Пары</small></button>

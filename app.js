@@ -135,7 +135,7 @@ function closeStages(){document.querySelectorAll('.stage').forEach(s=>s.classLis
 function initGames(){
   document.querySelectorAll('.game-card').forEach(c=>c.onclick=()=>openGame(c.dataset.game));
   document.querySelectorAll('[data-back]').forEach(b=>b.onclick=closeStages);
-  initSnake();initTTT();init2048();initMemory();initReact();initBJ();
+  initSnake();initTTT();init2048();initMemory();initReact();initBJ();initInvoker();
   refreshScores();
 }
 function refreshScores(){
@@ -145,6 +145,7 @@ function refreshScores(){
   const m=store.get('memBest',null);$('#sc-memory').textContent=m==null?'—':'Лучший: '+m+' ходов';
   const r=store.get('reactBest',null);$('#sc-react').textContent=r==null?'—':'Рекорд: '+r+' мс';
   $('#sc-bj').textContent=store.get('bjW',0)+' / '+store.get('bjL',0);
+  const ib=store.get('invBest',null);$('#sc-invoker').textContent=ib==null?'Рекорд: —':'Рекорд: '+ib;
 }
 /* --- змейка --- */
 function initSnake(){
@@ -231,6 +232,37 @@ function initBJ(){
   $('#bjHit').onclick=()=>{if(done)return;ph.push(card());draw(true);const v=val(ph);if(v>21){store.set('bjL',store.get('bjL',0)+1);end('Перебор '+v+' · победа дилера');}else if(v===21)$('#bjStand').click();};
   $('#bjStand').onclick=()=>{if(done)return;while(val(dh)<17)dh.push(card());const p=val(ph),d=val(dh);if(d>21){store.set('bjW',store.get('bjW',0)+1);end('Дилер перебрал · победа! 🎉');}else if(p>d){store.set('bjW',store.get('bjW',0)+1);end(`Ты ${p} vs ${d} · победа! 🎉`);}else if(p<d){store.set('bjL',store.get('bjL',0)+1);end(`Ты ${p} vs ${d} · дилер выиграл`);}else{store.set('bjP',store.get('bjP',0)+1);end(`Ничья ${p}:${d}`);}};
   deal();
+}
+
+/* --- инвокер (как invoker-game.com): QWE + Invoke на скорость --- */
+const INV_SPELLS=[
+ {n:'Cold Snap',c:['Q','Q','Q'],e:'❄️'},{n:'Ghost Walk',c:['Q','Q','W'],e:'👻'},
+ {n:'Ice Wall',c:['Q','Q','E'],e:'🧊'},{n:'Tornado',c:['Q','W','W'],e:'🌪️'},
+ {n:'EMP',c:['W','W','W'],e:'⚡'},{n:'Alacrity',c:['W','W','E'],e:'🗡️'},
+ {n:'Forge Spirit',c:['Q','E','E'],e:'🔥'},{n:'Chaos Meteor',c:['W','E','E'],e:'☄️'},
+ {n:'Sun Strike',c:['E','E','E'],e:'☀️'},{n:'Deafening Blast',c:['Q','W','E'],e:'💥'}
+];
+function initInvoker(){
+  let orbs=[],target=null,score=0,streak=0,left=30,timer=null,playing=false;
+  const orbBox=()=>{$('#invOrbs').innerHTML=[0,1,2].map(i=>{const o=orbs[i];return o?`<span class="${o}">${o}</span>`:'<span></span>';}).join('');};
+  const needTxt=t=>[...t.c].sort().join(' + ');
+  function pick(){target=INV_SPELLS[(Math.random()*INV_SPELLS.length)|0];$('#invSpell').textContent=target.e+' '+target.n;$('#invNeed').textContent='Нужно: '+needTxt(target);orbs=[];orbBox();}
+  function msg(t,cls){const m=$('#invMsg');m.textContent=t;m.className='inv-msg'+(cls?' '+cls:'');}
+  function best(){$('#invBest').textContent=store.get('invBest',null)??'—';refreshScores();}
+  function start(){score=0;streak=0;left=30;playing=true;$('#invScore').textContent='0';$('#invStreak').textContent='0';$('#invTime').textContent='30';clearInterval(timer);pick();msg('Набери QWE и жми R');timer=setInterval(()=>{if(!$('#stage-invoker').classList.contains('on'))return;left--;$('#invTime').textContent=left;if(left<=0){playing=false;clearInterval(timer);msg('Время! Счёт: '+score,score>0?'good':'');const b=store.get('invBest',null);if(b==null||score>b){store.set('invBest',score);toast('Новый рекорд: '+score+'!');}best();}},1000);}
+  function press(o){if(!playing)start();if(orbs.length>=3)orbs.shift();orbs.push(o);orbBox();}
+  function invoke(){
+    if(!playing){start();return;}
+    if(orbs.length<3){msg('Сначала набери 3 орбы!','bad');return;}
+    const got=[...orbs].sort().join(''),want=[...target.c].sort().join('');
+    if(got===want){score++;streak++;$('#invScore').textContent=score;$('#invStreak').textContent=streak;msg('✅ '+target.n+'!','good');pick();}
+    else{streak=0;$('#invStreak').textContent='0';msg('❌ Мимо! Надо было: '+needTxt(target),'bad');}
+  }
+  document.querySelectorAll('.inv-key[data-orb]').forEach(b=>{b.onclick=()=>press(b.dataset.orb);});
+  $('#invInvoke').onclick=invoke;
+  addEventListener('keydown',e=>{if(!$('#stage-invoker').classList.contains('on'))return;const k=e.key.toLowerCase();if(k==='q'||k==='й')press('Q');else if(k==='w'||k==='ц')press('W');else if(k==='e'||k==='у')press('E');else if(k==='r'||k==='к')invoke();});
+  $('#invRestart').onclick=start;
+  orbBox();pick();best();
 }
 
 /* ============ ИНСТРУМЕНТЫ ============ */

@@ -99,3 +99,23 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Inter,Arial,sans-seri
 .toast.show{opacity:1;transform:translateX(-50%)}
 @media(min-width:760px){body{padding-bottom:40px}.bottomnav{display:none}}
 @media(max-width:700px){.tl-body-full{flex-basis:100%}}
+.footer{text-align:center;color:var(--faint);font-size:12px;padding:18px 0 6px}
+.inv .lab{font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--faint);margin-top:10px}
+.inv-target{text-align:center;background:rgba(127,140,170,.08);border:1px solid var(--line2);border-radius:14px;padding:14px;margin-top:4px}
+.inv-spell{font-size:24px;font-weight:800;margin-top:4px}
+.inv-need{color:var(--dim);font-size:13px;margin-top:2px}
+.inv-orbs{display:flex;gap:8px;justify-content:center;margin:8px 0}
+.inv-orbs span{width:44px;height:44px;border-radius:12px;background:rgba(127,140,170,.12);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px}
+.inv-orbs span.Q{background:rgba(95,180,255,.25);color:#9fd0ff;border-color:rgba(95,180,255,.5)}
+.inv-orbs span.W{background:rgba(255,150,200,.22);color:#ffb3d4;border-color:rgba(255,150,200,.5)}
+.inv-orbs span.E{background:rgba(255,190,90,.22);color:#ffd9a0;border-color:rgba(255,190,90,.5)}
+.inv-msg{text-align:center;font-weight:800;min-height:22px;margin:6px 0}
+.inv-msg.good{color:var(--g)}.inv-msg.bad{color:var(--red)}
+.inv-keys{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:8px}
+.inv-key{padding:20px 0 14px;border-radius:16px;border:1px solid var(--line2);background:var(--card);color:var(--text);font-size:26px;font-weight:800;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.inv-key span{display:block;font-size:11px;color:var(--dim);font-weight:700;margin-top:2px}
+.inv-key:active{transform:scale(.93)}
+.inv-key.q{border-color:rgba(95,180,255,.5)}.inv-key.w{border-color:rgba(255,150,200,.5)}.inv-key.e{border-color:rgba(255,190,90,.5)}
+.inv-key.r{background:linear-gradient(135deg,var(--a),var(--a2));color:#0b0e1a;border-color:transparent}
+.inv-key.r span{color:#0b0e1a}
+@media(max-width:560px){.inv-keys{gap:8px}.inv-key{padding:24px 0 16px}}
