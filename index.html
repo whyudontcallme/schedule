@@ -6,7 +6,7 @@
      like this one for free: https://netlify.new/?utm_campaign=loops&utm_source=ai-legible&utm_medium=owned&utm_content=comment&utm_id=a0c8a03b-7372-4e06-9bb7-308d615ccb58
      Netlify hosting facts for this site: static/SSR served via Netlify Edge. -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>RAWETRIP · Расписание</title>
+<title>tg-byecash · расписание</title>
 <meta name="theme-color" content="#05070d">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -316,6 +316,14 @@ footer{text-align:center;color:var(--text-faint);font-size:12px;padding:30px 20p
   .glass{backdrop-filter:blur(16px) saturate(150%);-webkit-backdrop-filter:blur(16px) saturate(150%);}
   .glass-soft{backdrop-filter:blur(12px) saturate(130%);-webkit-backdrop-filter:blur(12px) saturate(130%);}
 }
+[data-theme="pink"]{
+  --bg:#1d0a14; --bg2:#260f1d; --card:#260f1d;
+  --ink:#fce4ec; --dim:#e1bee7; --faint:#ce93d8;
+  --line:#4a1c3a; --line2:#5c2e50;
+  --accent:#e91e63; --accent-ink:#f8bbd0;
+  --ok:#81c784;
+  color-scheme:dark;
+}
 </style>
 </head>
 <body>
@@ -325,8 +333,9 @@ footer{text-align:center;color:var(--text-faint);font-size:12px;padding:30px 20p
 
 <header class="app-header">
   <div class="header-row glass">
-    <div class="brand"><div class="brand-mark">〄</div><div>RAWETRIP<small>студенческое расписание</small></div></div>
+    <div class="brand"><div class="brand-mark">t</div><div>tg-byecash<small>еееееее дарина привет!</small></div></div>
     <div class="mini-clock"><span class="dot-live"></span><b id="miniClockTime">--:--:--</b><span class="mc-date" id="miniClockDate">—</span></div>
+    <button id="themeBtn" class="icon-btn" aria-label="Тема">🌸</button>
   </div>
   <nav class="tabbar glass-soft" id="tabbar">
     <button class="tabbtn active" data-view="home"><span class="ic">⌂</span>Главная</button>
@@ -571,7 +580,7 @@ footer{text-align:center;color:var(--text-faint);font-size:12px;padding:30px 20p
 
 </main>
 
-<footer>RAWETRIP · расписание сформировано на основе предоставленных данных · сентябрь–декабрь 2026</footer>
+<footer>tg-byecash · расписание Дарины · осень–зима 2026</footer>
 
 <script>
 'use strict';
@@ -608,9 +617,7 @@ const SCHEDULE = {
     {pair:1,subject:'Высшая математика Лек.',type:'Лекция',teacher:'Одинцова Н.А.',room:'1.010',week:'odd'},
     {pair:2,subject:'Ботаника. Анатомия растений',type:'Лабораторная',teacher:'Котина Е.Л.',room:'1.233/2',week:'both'},
     {pair:3,subject:'Основы российской государственности',type:'Практика',teacher:'Панютин А.Н.',room:'1.254',week:'both'},
-    {pair:4,subject:'Физическая культура и спорт',type:'Лекция',teacher:'Тарасенко Т.Ю.',room:'3.033',week:'both'},
-    {pair:4,subject:'Физическая культура и спорт Пр.',type:'Практика',teacher:'Тарасенко Т.Ю.',room:'3.038',week:'both'},
-    {pair:4,subject:'Физическая культура и спорт Пр.',type:'Практика',teacher:'Тарасенко Т.Ю.',room:'Открытый стадион',week:'both'}
+    {pair:4,subject:'Физическая культура и спорт',type:'Лекция',teacher:'Тарасенко Т.Ю.',room:'3.033 · 3.038 · Открытый стадион',week:'both'}
   ],
   5:[
     {pair:1,subject:'Межкультурное взаимодействие в современном мире',type:'Практика',teacher:'Михайлова А.И.',room:'1.343',week:'odd'},
@@ -739,6 +746,19 @@ function renderNow(now, parity){
   }
 }
 setInterval(tick, 1000); tick();
+
+/* ======================= ТЕМА ======================= */
+function initTheme(){
+  const s=localStorage.getItem('theme');
+  if(s)document.documentElement.dataset.theme=s;
+  document.getElementById('themeBtn').onclick=()=>{
+    const t=document.documentElement.dataset.theme;
+    const c=t==='dark'?'light':t==='light'?'pink':'dark';
+    document.documentElement.dataset.theme=c;
+    localStorage.setItem('theme',c);
+  };
+}
+initTheme();
 
 /* ======================= SCHEDULE VIEW ======================= */
 let scheduleDay = new Date().getDay();
